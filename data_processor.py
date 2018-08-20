@@ -9,8 +9,9 @@ def create_table(table_name):
     dynamodb = boto3.client("dynamodb")
     tables = dynamodb.list_tables()["TableNames"]
     if table_name not in tables:
-        table_name = dynamodb.create_table(
-            TableName = table_name,
+        dynamodb_resource = boto3.resource('dynamodb')
+        table = dynamodb_resource.create_table(
+        TableName = table_name,
             KeySchema = [
                 {
                     "AttributeName": "id",
@@ -37,9 +38,12 @@ def create_table(table_name):
                 },
             )
         print("Table has been successfully created")
+        return True
+
 
     else:
         print("{} table already exist in database".format(table_name))
+        return False
 
 
 # Check if table exist. If table exist, insert table records
@@ -56,19 +60,20 @@ def insert_records_into_table(table_name, dict_items):
         print("{} table doesn't exist".format(table_name))
 
 if __name__ == '__main__':
-    create_table("campaigns")
-    fake = Faker()
-    number_of_day = 0
-    for i in range(30):
-        number_of_day += 2
-        days = timedelta(days=number_of_day)
-        campaign_start_date = datetime.now()
-        campgaign_end_date = campaign_start_date + days
-        insert_records_into_table('campaigns', {
+    print(create_table('campaigns'))
+    if not create_table("campaigns"):
+        fake = Faker()
+        number_of_day = 0
+        for i in range(30):
+            number_of_day += 2
+            days = timedelta(days=number_of_day)
+            campaign_start_date = datetime.now()
+            campgaign_end_date = campaign_start_date + days
+            insert_records_into_table('campaigns', {
             "id": str(uuid.uuid4()),
             "campaignName": fake.company(),
             "address": fake.address(),
             "campaignStartDate": str(campaign_start_date.date()),
             "campaignEndDate": str(campgaign_end_date.date()),
             "email": "momo.johnson1987@gmail.com"
-        })
+            })
